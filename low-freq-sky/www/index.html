@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+   <meta charset="UTF-8" />
+   <title>Low Frequency Sky</title>
+   <link href="css/ui-lightness/jquery-ui-1.10.3.custom.css" rel="stylesheet">
+   <link href="css/date.css" rel="stylesheet">
+   <script src="js/jquery-1.9.1.js"></script>
+   <script src="js/jquery-ui-1.10.3.custom.js"></script>
+   <script src="js/jquery-ui-timepicker-addon.js"></script>
+  </head>
+
+  <body>
+   <center>
+    <table>
+     <tr>
+      <td><canvas id="skyPlotCanvas" width="600" height="500"></canvas></td>
+      <td>
+       <div id="projection">
+        Projection:<br />
+        <input type="radio" name="projection" value="sin" onclick="updateProjection();" checked>Sin<br />
+        <input type="radio" name="projection" value="azimuthal" onclick="updateProjection();">Azimuthal
+       </div>
+       <div id="datepicker"></div>
+       <div id="observatory">
+        Location:<br />
+        <input type="radio" name="observatory" value="ovro" onclick="updateObservatory();" checked>Owens Valley, US<br />
+	<input type="radio" name="observatory" value="birr" onclick="updateObservatory();">Birr, IE<br />
+        <input type="radio" name="observatory" value="exloo" onclick="updateObservatory();">Exloo, NL<br />
+        <input type="radio" name="observatory" value="onsala" onclick="updateObservatory();">Onsala, SE<br />
+        <input type="radio" name="observatory" value="gmrt" onclick="updateObservatory();">Khodad, IN<br />
+        <input type="radio" name="observatory" value="mwa" onclick="updateObservatory();">Murchison, AU
+       </div>
+      </td>
+     </tr>
+    </table>
+   </center>
+   <script src="js/low_freq_sky_plotter.js"></script>
+   <script>
+    var sky_plot = LowFreqSkyPlotter("skyPlotCanvas");
+
+    var updateProjection = function() {
+        var projection = $('input[name="projection"]:checked').val();
+        localStorage.projection = projection;
+        sky_plot.setProjection(projection);
+    };
+    
+    var updateObservatory = function() {
+        var observatory = $('input[name="observatory"]:checked').val();
+        localStorage.observatory = observatory;
+        sky_plot.setObservatory(observatory);
+    };
+    
+    var updateDatetime = function(val) {
+	var match = val.match(/\d{4}\/\d{2}\/\d{2}\/\d{2}:\d{2}:\d{2}([+-])(\d{2})(\d{2})$/);
+	if (match !== null) {
+	    var tz_sign = match[1];
+            var tz_hour = parseInt(match[2]);
+            var tz_minute = parseInt(match[3]);
+	    var timezone = tz_hour * 60 + tz_minute;
+	    if (tz_sign === "-") {
+	        timezone = timezone * -1;
+	    }
+            localStorage.timezone = timezone;
+            sky_plot.setDatetime(val);
+	} else {
+            console.log("Error parsing datetime: "+val);
+	}
+    };
+
+    var validRadioOption = function(group, val) {
+	var radio_set = $("input[name='"+group+"']");
+	if (radio_set.length === 0) {
+	    return undefined;
+	} else {
+	    for (var i=0; i<radio_set.length; i++) {
+	 	if (radio_set[i].value === val) {
+		    return true;
+		}
+	    }
+	    return false;
+	}
+    };
+    
+    $(document).ready(function() {
+	var timezone = parseInt(localStorage.timezone);
+	if (isNaN(timezone)) {
+	    timezone = 0;
+	}
+	
+	$("#datepicker").datetimepicker({
+            timezoneList: [{label: "UTC", value: 0},
+                           {label: "UTC+1", value: 60},
+                           {label: "UTC+2", value: 120},
+                           {label: "UTC+5:30", value: 330},
+                           {label: "UTC+8", value: 480},
+                           {label: "PST", value: -480},
+                           {label: "PDT", value: -420}],
+            onSelect: updateDatetime,
+            dateFormat: "yy/mm/dd",
+            timeFormat: "HH:mm:ssz",
+            separator: "/",
+	    timezone: timezone,
+            showTimezone: true,
+	});
+	    
+	var stored_projection = localStorage.projection;
+        if (validRadioOption("projection", stored_projection)) {
+            $("input[name='projection'][value='"+stored_projection+"']").prop('checked', true);
+        }
+	updateProjection();
+
+        var stored_observatory = localStorage.observatory;
+        if (validRadioOption("observatory", stored_observatory)) {
+            $("input[name='observatory'][value='"+stored_observatory+"']").prop('checked', true);
+        }
+	updateObservatory();
+        
+	sky_plot.drawAxes();
+        $.datepicker._gotoToday('#datepicker');
+    });
+  </script>
+ </body>
+</html>

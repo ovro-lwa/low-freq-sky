@@ -1,0 +1,20 @@
+server {
+	listen 80 default_server;
+	listen [::]:80 default_server;
+
+	root /low-freq-sky/www;
+	index index.html
+
+	server_name _;
+
+	location /low-freq-sky-query {
+		rewrite  ^/low-freq-sky-query/(.*) /$1 break;
+		include uwsgi_params;
+    		uwsgi_pass 127.0.0.1:3031;
+	}
+
+	location /admin {
+		include uwsgi_params;
+    		uwsgi_pass 127.0.0.1:3031;
+	}
+}
