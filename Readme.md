@@ -6,7 +6,7 @@ any objects can be added.
 
 ## Quickstart
 
-`docker run -d -p 8081:80 sabourke/low-freq-sky`
+`docker run -d -p 8081:80 sabourke/low-freq-sky:1.0`
 
 Then go to [localhost:8081](http://localhost:8081/)
 
@@ -14,7 +14,7 @@ Then go to [localhost:8081](http://localhost:8081/)
 
 On a server use:
 
-`docker run -d -p 8081:80 --restart unless-stopped sabourke/low-freq-sky`
+`docker run -d -p 8081:80 --restart unless-stopped sabourke/low-freq-sky:1.0`
 
 to have it started automatically when docker daemon starts.
 
